@@ -46,8 +46,17 @@
         lectorQR = new Html5Qrcode("lector");
         estado.textContent = "Solicitando permiso para la cámara...";
 
-        await lectorQR.start(
-          { facingMode: "environment" },
+       const camaras = await Html5Qrcode.getCameras();
+
+if (!camaras || camaras.length === 0) {
+  throw new Error("No se detectaron cámaras disponibles.");
+}
+
+lectorQR = new Html5Qrcode("lector");
+estado.textContent = "Abriendo cámara...";
+
+await lectorQR.start(
+  camaras[0].id,
           { fps: 10, qrbox: { width: 250, height: 250 } },
           (texto) => {
             resultado.textContent = "QR leído: " + texto;
