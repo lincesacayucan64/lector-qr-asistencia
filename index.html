@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lector QR de asistencia</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 16px;
+      text-align: center;
+    }
+    button {
+      padding: 12px 18px;
+      margin: 8px;
+      cursor: pointer;
+    }
+    #lector { width: 100%; margin-top: 20px; }
+    #resultado { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <h2>Lector QR de asistencia</h2>
+  <p>Prueba de cámara. Esta página no registra asistencia.</p>
+  <button id="iniciar">Iniciar cámara</button>
+  <button id="detener" disabled>Detener cámara</button>
+  <div id="lector"></div>
+  <p id="estado">Pulsa «Iniciar cámara».</p>
+  <p id="resultado"></p>
+
+  <script>
+    let lectorQR = null;
+
+    document.getElementById("iniciar").onclick = async function () {
+      const estado = document.getElementById("estado");
+      const resultado = document.getElementById("resultado");
+
+      try {
+        if (typeof Html5Qrcode === "undefined") {
+          throw new Error("No se cargó la biblioteca QR. Revisa internet.");
+        }
+
+        lectorQR = new Html5Qrcode("lector");
+        estado.textContent = "Solicitando permiso para la cámara...";
+
+        await lectorQR.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (texto) => {
+            resultado.textContent = "QR leído: " + texto;
+            estado.textContent = "Lectura correcta.";
+          },
+          () => {}
+        );
+
+        estado.textContent = "Cámara activa. Enfoca un código QR.";
+        document.getElementById("iniciar").disabled = true;
+        document.getElementById("detener").disabled = false;
+      } catch (error) {
+        estado.textContent =
+          "No se pudo iniciar la cámara: " +
+          (error.message || error);
+        if (lectorQR) {
+          try { await lectorQR.clear(); } catch (e) {}
+          lectorQR = null;
+        }
+      }
+    };
+
+    document.getElementById("detener").onclick = async function () {
+      if (lectorQR) {
+        try {
+          await lectorQR.stop();
+          await lectorQR.clear();
+        } catch (e) {}
+        lectorQR = null;
+      }
+      document.getElementById("iniciar").disabled = false;
+      document.getElementById("detener").disabled = true;
+      document.getElementById("estado").textContent = "Cámara detenida.";
+    };
+  </script>
+</body>
+</html>
