@@ -207,7 +207,14 @@
         await lectorQR.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
-          (texto) => registrarQR(texto),
+         (texto) => {
+            const matricula = String(texto || "")
+              .trim()
+              .split("/")[0]
+              .trim();
+
+            registrarQR(matricula);
+          },
           () => {}
         );
 
